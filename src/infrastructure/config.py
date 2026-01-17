@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 설정 로드 모듈
 
@@ -20,8 +22,14 @@ class AppConfig(BaseModel):
     비민감 설정을 포함합니다.
     """
 
-    image_path: str = Field(default="~/Attachments", description="이미지 저장 경로")
-    default_tags: list[str] = Field(default_factory=lambda: ["clippings"], description="기본 태그 목록")
+    image_path: str = Field(
+        default="~/Attachments",
+        description="이미지 저장 경로",
+    )
+    default_tags: list[str] = Field(
+        default_factory=lambda: ["clippings"],
+        description="기본 태그 목록",
+    )
 
     @field_validator("image_path")
     @classmethod
@@ -42,6 +50,7 @@ class JinaAPIConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="JINA_", env_file=".env")
 
     api_key: str = Field(..., description="Jina AI API 키")
+    base_url: str = Field(default="https://r.jina.ai", description="Jina Reader API 기본 URL")
     headers: dict[str, Any] = Field(
         default={
             "x-with-generated-alt": False,
@@ -54,6 +63,9 @@ class JinaAPIConfig(BaseSettings):
         description="API 요청 헤더",
     )
     timeout: int = Field(default=20, description="요청 타임아웃 (초)")
+    max_retries: int = Field(default=3, description="최대 재시도 횟수")
+    retry_delay: int = Field(default=1, description="초기 재시도 대기 시간 (초)")
+    retry_multiplier: float = Field(default=2.0, description="지수 백오프 배수")
 
 
 class Settings:

@@ -18,6 +18,9 @@ config.yaml
 .chunkhound/db
 .chunkhound.json
 *.zip
+.coverage
+pkm_clip.egg-info/*
+htmlcov/*
 
 # Python
 __pycache__/

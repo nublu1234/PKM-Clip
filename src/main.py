@@ -8,7 +8,10 @@ from typer import Typer
 
 app = Typer(
     name="pkm-clip",
-    help="PKM-Clip: Personal Knowledge Management Tool - 웹 콘텐츠를 로컬 마크다운 파일로 저장하는 CLI 도구",
+    help=(
+        "PKM-Clip: Personal Knowledge Management Tool - "
+        "웹 콘텐츠를 로컬 마크다운 파일로 저장하는 CLI 도구"
+    ),
     add_completion=False,
 )
 
@@ -45,8 +48,7 @@ def clip(
         verbose: 상세 로그 출력
         dry_run: 실제 저장 없이 결과만 확인
     """
-    from src.infrastructure.config import Settings
-    from src.infrastructure.logger import setup_logging, get_logger
+    from src.infrastructure.logger import get_logger, setup_logging
 
     setup_logging(verbose=verbose)
     logger = get_logger()

@@ -4,10 +4,43 @@
 비즈니스 로직의 핵심 엔티티를 정의합니다.
 """
 
-from datetime import date
-from typing import Any
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field, field_validator
+
+
+class MarkdownContent(BaseModel):
+    """
+    마크다운 콘텐츠 모델
+
+    Jina AI Reader API를 통해 변환된 웹페이지 콘텐츠를 저장합니다.
+    """
+
+    url: str = Field(..., description="원본 URL")
+    markdown: str = Field(..., description="변환된 마크다운 콘텐츠")
+    fetched_at: datetime = Field(
+        default_factory=datetime.now,
+        description="콘텐츠를 가져온 시간 (UTC)",
+    )
+
+    @field_validator("url")
+    @classmethod
+    def validate_url_format(cls, v: str) -> str:
+        """
+        URL이 유효한 형식인지 확인합니다.
+
+        Args:
+            v: 검증할 URL
+
+        Returns:
+            유효한 URL
+
+        Raises:
+            ValueError: URL 형식이 올바르지 않은 경우
+        """
+        if not v or not v.strip():
+            raise ValueError("URL cannot be empty")
+        return v.strip()
 
 
 class Frontmatter(BaseModel):
