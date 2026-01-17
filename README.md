@@ -145,11 +145,3 @@ PKM-Clip/
 ├── .env.example
 └── pyproject.toml
 ```
-
-## 라이선스
-
-MIT
-
-## 연락처
-
-이슈가 있으면 GitHub Issues에 등록해주세요.
