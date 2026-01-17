@@ -1,0 +1,11 @@
+image_path: ~/Attachments
+default_tags:
+  - clippings
+jina_api:
+  headers:
+    x-with-generated-alt: false
+    x-no-cache: false
+    x-cache-tolerance: 3600
+    x-respond-with: markdown
+    x-timeout: 20
+    Accept: "text/event-stream"
