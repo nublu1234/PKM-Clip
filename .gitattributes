@@ -1,6 +1,7 @@
 secrets/** filter=git-crypt diff=git-crypt
 pm_doc/** filter=git-crypt diff=git-crypt
 openspec/** filter=git-crypt diff=git-crypt
+AGENTS.md filter=git-crypt diff=git-crypt
 
 # .gitattributes 파일 자체는 암호화 대상에서 제외
 .gitattributes !filter !diff
