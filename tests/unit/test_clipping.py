@@ -4,10 +4,11 @@ Clipping 엔티티 단위 테스트
 Clipping.to_markdown() 메서드를 테스트합니다.
 """
 
+from datetime import date
+
 import yaml
 
 from src.domain.entities import Clipping, Frontmatter
-from datetime import date
 
 
 class TestClippingToMarkdown:

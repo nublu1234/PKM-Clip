@@ -9,8 +9,7 @@ import asyncio
 from typer import Typer
 
 from src.application.models import FrontmatterOptions
-from src.application.url_to_markdown_service import URLToMarkdownService
-from src.infrastructure.config import AppConfig
+from src.application.save_markdown_file_service import SaveMarkdownFileService
 from src.infrastructure.logger import get_logger, setup_logging
 
 app = Typer(
@@ -76,29 +75,32 @@ def clip(
     settings = Settings(config_path=config)
 
     # 서비스 초기화
-    service = URLToMarkdownService(
-        default_tags=settings.app.default_tags,
-    )
+    service = SaveMarkdownFileService()
 
     # 비동기로 URL 처리
     async def process() -> None:
         logger.info(f"URL 처리 시작: {url}")
-        clipping = await service.process_url(url, options=cli_options)
 
-        # 결과 출력
-        logger.info(f"Clipping 생성 완료")
-        logger.info(f"제목: {clipping.frontmatter.title}")
-        logger.info(f"저자: {clipping.frontmatter.author}")
-        logger.info(f"게시일: {clipping.frontmatter.published}")
-        logger.info(f"태그: {clipping.frontmatter.tags}")
+        try:
+            # 파일 저장
+            filepath = await service.save_markdown_file(
+                url=url,
+                output_dir=output,
+                filename=filename,
+                force=force,
+                frontmatter_options=cli_options,
+                image_path=settings.app.image_path,
+                no_images=no_images,
+            )
 
-        if dry_run:
-            logger.info("Dry-run 모드: 파일 저장하지 않음")
-            print(f"---\n{clipping.to_markdown()}---")
-        else:
-            # 파일 저장 로직은 향후 Task에서 구현
-            logger.info("파일 저장 기능은 향후 구현 예정")
-            logger.info(f"생성된 마크다운:\n{clipping.to_markdown()}")
+            # 결과 출력
+            logger.info(f"✅ 파일 저장 완료: {filepath}")
+            print(f"✅ 파일 저장 완료: {filepath}")
+
+        except Exception as e:
+            logger.error(f"파일 저장 실패: {e}")
+            print(f"❌ 파일 저장 실패: {e}")
+            raise
 
     asyncio.run(process())
 

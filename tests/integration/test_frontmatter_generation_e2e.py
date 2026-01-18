@@ -6,9 +6,7 @@ E2E 통합 테스트
 
 import pytest
 
-from src.application.models import FrontmatterOptions
 from src.application.url_to_markdown_service import URLToMarkdownService
-from src.domain.entities import Clipping
 
 
 class TestFrontmatterGenerationE2E:

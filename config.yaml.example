@@ -1,4 +1,8 @@
+# 이미지 저장 경로 (기본값: ~/Attachments)
+# ~ 표시는 사용자 홈 디렉토리로 확장됨
 image_path: ~/Attachments
+
+# 기본 태그 목록
 default_tags:
   - clippings
 jina_api:

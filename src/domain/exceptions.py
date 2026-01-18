@@ -91,3 +91,76 @@ class RetryableHTTPStatusError(JinaReaderAPIError):
 
     def __init__(self, message: str = "Server error occurred. Retry may succeed.") -> None:
         super().__init__(message)
+
+
+class ImageDownloadError(InfrastructureError):
+    """
+    이미지 다운로드 오류 예외
+
+    이미지 다운로드 실패 시 발생합니다.
+    네트워크 오류, 404, 403 등 다양한 상황에서 사용됩니다.
+    """
+
+    pass
+
+
+class ImageSizeExceededError(ImageDownloadError):
+    """
+    이미지 크기 초과 예외
+
+    이미지가 설정된 최대 크기(기본 10MB)를 초과할 때 발생합니다.
+    """
+
+    def __init__(self, message: str = "Image size exceeds the maximum limit.") -> None:
+        super().__init__(message)
+
+
+class DiskSpaceError(InfrastructureError):
+    """
+    디스크 공간 부족 예외
+
+    디스크 공간이 부족하여 파일을 저장할 수 없을 때 발생합니다.
+    """
+
+    def __init__(
+        self, message: str = "Disk space is insufficient. Please free up space and try again."
+    ) -> None:
+        super().__init__(message)
+
+
+class FileError(PKMClipError):
+    """
+    파일 관련 예외
+
+    파일 작업 중 발생하는 일반적인 예외입니다.
+    """
+
+    pass
+
+
+class FileExistsError(FileError):
+    """
+    파일이 이미 존재하는 예외
+
+    파일이 존재하고 `force=False`일 때 발생합니다.
+    """
+
+    def __init__(
+        self,
+        message: str = "File already exists. Use --force option to overwrite.",
+    ) -> None:
+        super().__init__(message)
+
+
+class InvalidFilenameError(FileError):
+    """
+    유효하지 않은 파일명 예외
+
+    파일명에 허용되지 않는 문자가 포함되어 있을 때 발생합니다.
+    """
+
+    def __init__(
+        self,
+        message: str = "Filename contains invalid characters.",
+    ) -> None:
+        super().__init__(message)

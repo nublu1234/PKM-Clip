@@ -12,7 +12,7 @@ PKM-Clip은 웹 상의 다양한 글과 콘텐츠를 jina.ai reader를 활용하
 - **Jina AI Reader 활용**: 웹페이지 → 마크다운 자동 변환
 - **YAML Frontmatter**: 구조화된 메타데이터 자동 생성
 - **Obsidian 호환**: Obsidian과 호환되는 마크다운 파일 생성
-- **이미지 자동 처리**: 이미지 다운로드 및 로컬 참조 변환 (개발 예정)
+- **이미지 자동 처리**: 이미지 다운로드 및 로컬 참조 변환
 
 ## 설치
 
@@ -89,7 +89,7 @@ pkm-clip clip <URL>
 
 - `--output DIR`: 저장할 디렉토리 (기본값: 현재 디렉토리)
 - `--filename NAME`: 파일명 직접 지정 (기본값: title 값)
-- `--no-images`: 이미지 다운로드 스킵
+- `--no-images`: 이미지 다운로드 스킵 (기본값: false)
 - `--force`: 동일 파일명 존재 시 덮어쓰기
 
 **설정 관련**
@@ -101,10 +101,92 @@ pkm-clip clip <URL>
 ### 사용 예시
 
 ```bash
+# 기본 사용: 현재 디렉토리에 저장
 pkm-clip clip https://example.com/article
-pkm-clip clip https://example.com/article --tags "clippings,learning"
+
+# 특정 디렉토리에 저장
 pkm-clip clip https://example.com/article --output ~/Documents
+
+# 파일명 직접 지정
+pkm-clip clip https://example.com/article --filename "my-article"
+
+# 태그 추가
+pkm-clip clip https://example.com/article --tags "clippings,learning"
+
+# 동일 파일명 존재 시 덮어쓰기
+pkm-clip clip https://example.com/article --force
+
+# 이미지 다운로드 스킵
+pkm-clip clip https://example.com/article --no-images
+
+# 도움말 보기
 pkm-clip --help
+```
+
+### 파일 저장
+
+PKM-Clip은 자동으로 마크다운 파일을 저장합니다:
+
+- **파일명**: 웹페이지 제목에서 자동 생성 (특수 문자는 `_`로 변환)
+- **파일명 중복 처리**: `Title.md`, `Title 1.md`, `Title 2.md` 등 자동으로 번호 추가
+- **덮어쓰기**: `--force` 옵션으로 기존 파일 덮어쓰기
+- **디렉토리**: `--output` 옵션으로 저장 디렉토리 지정 (기본값: 현재 디렉토리)
+
+#### 파일명 정규화
+
+파일 시스템 호환성을 위해 다음 문자들이 `_`로 변환됩니다:
+
+- `/ \ : * ? " < > |`
+
+#### 예시 출력
+
+```
+✅ 파일 저장 완료: /home/user/Documents/Test Article.md
+```
+
+## 이미지 처리
+
+PKM-Clip은 웹페이지 내 이미지를 자동으로 다운로드하고 Obsidian 호환 참조 형식으로 변환합니다.
+
+### 이미지 처리 기능
+
+- **자동 다운로드**: 웹페이지 내 모든 이미지를 `~/Attachments` 디렉토리에 다운로드
+- **Obsidian 참조 변환**: `![alt](url)` 형식을 `![[filename]]` 형식으로 변환
+- **중복 방지**: URL 기반 해시로 동일 이미지 중복 다운로드 방지
+- **파일명 형식**: `YYYYMMDD_HHMMSS_{hash}.{extension}` (예: `20250116_145930_a3f2b1c4.png`)
+- **에러 처리**: 다운로드 실패 시 원본 URL 유지 및 경고 로그 기록
+- **파일 크기 제한**: 10MB 이하 이미지만 다운로드
+
+### 이미지 설정
+
+`config.yaml`에서 이미지 저장 경로를 설정할 수 있습니다:
+
+```yaml
+image_path: ~/Attachments # 이미지 저장 경로 (기본값: ~/Attachments)
+```
+
+### --no-images 옵션
+
+이미지 다운로드를 건너뛰려면 `--no-images` 플래그를 사용하세요:
+
+```bash
+pkm-clip clip https://example.com/article --no-images
+```
+
+### Obsidian 참조 형식
+
+변환 전:
+
+```markdown
+![alt text](https://example.com/image.png)
+<img src="https://example.com/image.jpg" alt="alt text">
+```
+
+변환 후:
+
+```markdown
+![[20250116_145930_a3f2b1c4.png]]
+![[20250116_145931_b4d2e5f6.jpg]]
 ```
 
 ## 개발
