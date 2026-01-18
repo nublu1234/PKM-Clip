@@ -147,6 +147,13 @@ class FrontmatterGenerator:
         """
         게시일 가져오기 (CLI 옵션 우선)
 
+        CLI 옵션 없는 경우 5단계 우선순위 전략으로 추출합니다:
+        1. jina.ai published time
+        2. Open Graph (article:published_time, og:published_time)
+        3. Schema.org (datePublished)
+        4. HTML meta 태그 (meta[name="date"])
+        5. URL 경로 패턴 (/YYYY/MM/DD/)
+
         Args:
             markdown_content: Jina Reader API 응답
             cli_options: CLI 옵션
@@ -163,9 +170,11 @@ class FrontmatterGenerator:
                 # Pydantic 유효성 검증에서 이미 처리됨
                 return None
 
-        parsed_date = self.parser.parse_published_date(markdown_content.markdown)
+        # 5단계 우선순위 추출 전략 사용
+        parsed_date = self.parser.extract_published_date(
+            markdown_content.markdown, markdown_content.url
+        )
         if parsed_date:
-            logger.debug(f"마크다운에서 게시일 추출: {parsed_date}")
             return parsed_date
 
         return None
