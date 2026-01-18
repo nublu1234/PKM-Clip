@@ -39,7 +39,7 @@ cp config.yaml.example config.yaml
 설정 파일 편집:
 
 ```yaml
-image_path: ~/Attachments
+image_path: ./Attachments
 default_tags:
   - clippings
 jina_api:
@@ -195,7 +195,7 @@ PKM-Clip은 웹페이지 내 이미지를 자동으로 다운로드하고 Obsidi
 
 ### 이미지 처리 기능
 
-- **자동 다운로드**: 웹페이지 내 모든 이미지를 `~/Attachments` 디렉토리에 다운로드
+- **자동 다운로드**: 웹페이지 내 모든 이미지를 `./Attachments` 디렉토리에 다운로드
 - **Obsidian 참조 변환**: `![alt](url)` 형식을 `![[filename]]` 형식으로 변환
 - **중복 방지**: URL 기반 해시로 동일 이미지 중복 다운로드 방지
 - **파일명 형식**: `YYYYMMDD_HHMMSS_{hash}.{extension}` (예: `20250116_145930_a3f2b1c4.png`)
@@ -207,7 +207,7 @@ PKM-Clip은 웹페이지 내 이미지를 자동으로 다운로드하고 Obsidi
 `config.yaml`에서 이미지 저장 경로를 설정할 수 있습니다:
 
 ```yaml
-image_path: ~/Attachments # 이미지 저장 경로 (기본값: ~/Attachments)
+image_path: ./Attachments # 이미지 저장 경로 (기본값: ./Attachments)
 ```
 
 ### --no-images 옵션

@@ -23,7 +23,7 @@ class AppConfig(BaseModel):
     """
 
     image_path: str = Field(
-        default="~/Attachments",
+        default="./Attachments",
         description="이미지 저장 경로",
     )
     default_tags: list[str] = Field(

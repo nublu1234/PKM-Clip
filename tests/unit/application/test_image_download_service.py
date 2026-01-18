@@ -66,7 +66,7 @@ class TestImageDownloadService:
         And: 원본 이미지 참조 유지
         """
         markdown = "![alt](https://example.com/image.png)"
-        image_path = "~/Attachments"
+        image_path = "./Attachments"
         no_images = True
 
         result, image_count = await image_download_service.process_markdown_images(
@@ -95,7 +95,7 @@ class TestImageDownloadService:
         Then: 이미지가 다운로드되고 Obsidian 참조로 변환됨
         """
         markdown = "![alt](https://example.com/image.png)"
-        image_path = "~/Attachments"
+        image_path = "./Attachments"
         no_images = False
 
         # Mock 다운로드
@@ -134,7 +134,7 @@ class TestImageDownloadService:
         Then: 원본 URL 유지
         """
         markdown = "![alt](https://example.com/image.png)"
-        image_path = "~/Attachments"
+        image_path = "./Attachments"
         no_images = False
 
         # Mock 다운로드 실패
@@ -169,7 +169,7 @@ class TestImageDownloadService:
         Then: 모든 이미지가 변환됨
         """
         markdown = "![img1](https://example.com/img1.png)\n![img2](https://example.com/img2.jpg)"
-        image_path = "~/Attachments"
+        image_path = "./Attachments"
         no_images = False
 
         # Mock 다운로드
@@ -207,7 +207,7 @@ class TestImageDownloadService:
         Then: 원본 콘텐츠 유지
         """
         markdown = "텍스트만 있는 콘텐츠입니다."
-        image_path = "~/Attachments"
+        image_path = "./Attachments"
         no_images = False
 
         with patch.object(
@@ -242,7 +242,7 @@ class TestImageDownloadService:
         Then: 성공한 이미지는 변환되고, 실패한 이미지는 원본 유지
         """
         markdown = "![img1](https://example.com/img1.png)\n![img2](https://example.com/img2.jpg)"
-        image_path = "~/Attachments"
+        image_path = "./Attachments"
         no_images = False
 
         # Mock 다운로드 (첫 번째 성공, 두 번째 실패)
@@ -281,7 +281,7 @@ class TestImageDownloadService:
         Then: HTML img 태그도 Obsidian 참조로 변환됨
         """
         markdown = '<img src="https://example.com/image.png" alt="alt text">'
-        image_path = "~/Attachments"
+        image_path = "./Attachments"
         no_images = False
 
         # Mock 다운로드
@@ -318,7 +318,7 @@ class TestImageDownloadService:
         And: 이미지 개수만 반환됨
         """
         markdown = "![alt](https://example.com/image.png)\n![img2](https://example.com/img2.jpg)"
-        image_path = "~/Attachments"
+        image_path = "./Attachments"
 
         with patch.object(
             image_downloader, "download_and_save", new_callable=AsyncMock
@@ -357,7 +357,7 @@ class TestImageDownloadService:
         And: 이미지 개수는 0
         """
         markdown = "텍스트만 있는 콘텐츠입니다."
-        image_path = "~/Attachments"
+        image_path = "./Attachments"
 
         result, image_count = await image_download_service.process_markdown_images(
             markdown=markdown,

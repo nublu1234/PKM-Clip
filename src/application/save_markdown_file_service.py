@@ -70,7 +70,7 @@ class SaveMarkdownFileService:
         filename: str | None = None,
         force: bool = False,
         frontmatter_options: FrontmatterOptions | None = None,
-        image_path: str = "~/Attachments",
+        image_path: str = "./Attachments",
         no_images: bool = False,
         dry_run: bool = False,
     ) -> SaveMarkdownFileResult:

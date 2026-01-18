@@ -61,7 +61,7 @@ class URLToMarkdownService:
         self,
         url: str,
         options: FrontmatterOptions | None = None,
-        image_path: str = "~/Attachments",
+        image_path: str = "./Attachments",
         no_images: bool = False,
         dry_run: bool = False,
     ) -> Clipping:
