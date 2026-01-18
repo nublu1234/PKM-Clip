@@ -4,13 +4,18 @@ SaveMarkdownFileService 단위 테스트
 마크다운 파일 저장 서비스를 테스트합니다.
 """
 
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from src.application.models import FrontmatterOptions
-from src.application.save_markdown_file_service import SaveMarkdownFileService
+from src.application.save_markdown_file_service import (
+    SaveMarkdownFileService,
+    SaveMarkdownFileResult,
+)
 from src.domain.entities import Clipping
+from src.infrastructure.markdown_file_writer import MarkdownWriteResult
 
 
 class TestSaveMarkdownFileService:
@@ -38,10 +43,16 @@ class TestSaveMarkdownFileService:
         return mock
 
     @pytest.fixture
-    def mock_markdown_file_writer(self):
+    def mock_markdown_file_writer(self, tmp_path):
         """MarkdownFileWriter 모의"""
         mock = MagicMock()
-        mock.write_markdown_file = MagicMock()
+        mock.write_markdown_file = MagicMock(
+            side_effect=lambda content, filepath, force=False, dry_run=False: MarkdownWriteResult(
+                filepath=filepath,
+                was_saved=not dry_run,
+                content_size=100,
+            )
+        )
         return mock
 
     @pytest.fixture
@@ -94,7 +105,8 @@ class TestSaveMarkdownFileService:
             output_dir=str(tmp_path),
         )
 
-        assert result.endswith("Test Article.md")
+        assert isinstance(result, SaveMarkdownFileResult)
+        assert str(result.filepath).endswith("Test Article.md")
         mock_url_to_markdown_service.process_url.assert_called_once()
         mock_url_to_markdown_service.process_url.call_args.kwargs[
             "url"
@@ -202,8 +214,8 @@ class TestSaveMarkdownFileService:
 
         # ~가 확장된 경로인지 확인
         default_dir = str(Path("~/Clippings").expanduser())
-        assert default_dir in result
-        assert result.endswith("Test Article.md")
+        assert default_dir in str(result.filepath)
+        assert str(result.filepath).endswith("Test Article.md")
 
     async def test_handle_duplicate_filename_no_force(
         self,
@@ -272,3 +284,50 @@ class TestSaveMarkdownFileService:
         call_args = mock_markdown_file_combiner.combine_frontmatter_and_markdown.call_args
         assert call_args.kwargs["frontmatter"]["title"] == "Test Article"
         assert call_args.kwargs["markdown"] == "# Test Article\n\nContent here..."
+
+    async def test_save_markdown_file_dry_run(
+        self,
+        service,
+        mock_url_to_markdown_service,
+        mock_markdown_file_writer,
+        sample_clipping,
+        tmp_path,
+    ):
+        """dry-run 모드: 파일 저장 안 됨"""
+        mock_url_to_markdown_service.process_url.return_value = sample_clipping
+
+        result = await service.save_markdown_file(
+            url="https://example.com/article",
+            output_dir=str(tmp_path),
+            dry_run=True,
+        )
+
+        mock_url_to_markdown_service.process_url.assert_called_once()
+        call_kwargs = mock_url_to_markdown_service.process_url.call_args.kwargs
+        assert call_kwargs["dry_run"] is True
+
+        mock_markdown_file_writer.write_markdown_file.assert_called_once()
+        call_kwargs = mock_markdown_file_writer.write_markdown_file.call_args.kwargs
+        assert call_kwargs["dry_run"] is True
+
+    async def test_save_markdown_file_dry_run_result(
+        self,
+        service,
+        mock_url_to_markdown_service,
+        mock_markdown_file_writer,
+        sample_clipping,
+        tmp_path,
+    ):
+        """dry-run 모드 결과 확인"""
+        mock_url_to_markdown_service.process_url.return_value = sample_clipping
+
+        result = await service.save_markdown_file(
+            url="https://example.com/article",
+            output_dir=str(tmp_path),
+            dry_run=True,
+        )
+
+        assert result.was_saved is False
+        assert result.content_size > 0
+        assert result.filename == "Test Article"
+        assert result.frontmatter["title"] == "Test Article"

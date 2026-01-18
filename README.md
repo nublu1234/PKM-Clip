@@ -91,12 +91,12 @@ pkm-clip clip <URL>
 - `--filename NAME`: 파일명 직접 지정 (기본값: title 값)
 - `--no-images`: 이미지 다운로드 스킵 (기본값: false)
 - `--force`: 동일 파일명 존재 시 덮어쓰기
+- `--dry-run`: 실제 저장 없이 결과만 확인 (기본값: false)
 
 **설정 관련**
 
 - `--config PATH`: config.yaml 파일 경로 지정
 - `--verbose`: 상세 로그 출력
-- `--dry-run`: 실제 저장 없이 결과만 확인
 
 ### 사용 예시
 
@@ -118,6 +118,9 @@ pkm-clip clip https://example.com/article --force
 
 # 이미지 다운로드 스킵
 pkm-clip clip https://example.com/article --no-images
+
+# dry-run 모드: 파일 저장 없이 결과만 확인
+pkm-clip clip https://example.com/article --dry-run
 
 # 도움말 보기
 pkm-clip --help
@@ -142,6 +145,48 @@ PKM-Clip은 자동으로 마크다운 파일을 저장합니다:
 
 ```
 ✅ 파일 저장 완료: /home/user/Documents/Test Article.md
+```
+
+### Dry-Run 모드
+
+`--dry-run` 옵션을 사용하면 실제 파일을 저장하지 않고 결과를 미리 확인할 수 있습니다.
+
+#### Dry-Run 동작
+
+dry-run 모드에서는 다음 작업이 수행됩니다:
+
+- **URL → 마크다운 변환**: 콘텐츠 확인을 위해 변환 수행
+- **Frontmatter 생성**: YAML frontmatter 생성
+- **파일명 생성**: 중복 처리 포함한 파일명 계산
+- **이미지 개수 확인**: 이미지 다운로드는 스킵되지만 개수만 계산
+
+#### Dry-Run에서 스킵되는 작업
+
+- **파일 시스템 저장**: 실제 파일 생성 스킵
+- **이미지 다운로드**: 불필요한 리소스 사용 방지
+
+#### Dry-Run 예시 출력
+
+```
+============================================================
+🔍 DRY-RUN MODE: 파일이 저장되지 않았습니다.
+============================================================
+
+📁 파일 경로: /home/user/Documents/Test Article.md
+📄 파일명: Test Article
+
+📋 Frontmatter:
+   Title: Test Article
+   Source: https://example.com/article
+   Author: John Doe
+   Tags: clippings, learning
+
+📊 마크다운 콘텐츠 길이: 1,234 bytes
+🖼️  발견된 이미지 개수: 3
+
+============================================================
+💡 실제 저장을 하려면 --dry-run 옵션을 제거하세요.
+============================================================
 ```
 
 ## 이미지 처리

@@ -7,6 +7,8 @@ URL에서 마크다운을 가져와 파일로 저장하는 전체 워크플로�
 from pathlib import Path
 from typing import Final
 
+from pydantic import BaseModel
+
 from src.application.models import FrontmatterOptions
 from src.application.url_to_markdown_service import URLToMarkdownService
 from src.domain.filename_generator import FilenameGenerator
@@ -18,6 +20,19 @@ logger = get_logger()
 
 # 기본 출력 디렉토리
 DEFAULT_OUTPUT_DIR: Final = "~/Clippings"
+
+
+class SaveMarkdownFileResult(BaseModel):
+    """
+    마크다운 파일 저장 결과
+    """
+
+    filepath: Path
+    was_saved: bool
+    content_size: int
+    frontmatter: dict
+    filename: str
+    image_count: int = 0
 
 
 class SaveMarkdownFileService:
@@ -57,7 +72,8 @@ class SaveMarkdownFileService:
         frontmatter_options: FrontmatterOptions | None = None,
         image_path: str = "~/Attachments",
         no_images: bool = False,
-    ) -> str:
+        dry_run: bool = False,
+    ) -> SaveMarkdownFileResult:
         """
         URL에서 마크다운을 가져와 파일로 저장합니다.
 
@@ -69,9 +85,10 @@ class SaveMarkdownFileService:
             frontmatter_options: Frontmatter 옵션
             image_path: 이미지 저장 경로
             no_images: 이미지 다운로드 스킵 여부
+            dry_run: 실제 저장하지 않고 결과만 반환 (기본값: False)
 
         Returns:
-            저장된 파일 경로
+            SaveMarkdownFileResult: 저장 결과 정보
 
         Raises:
             FileExistsError: 파일이 존재하고 force=False일 때
@@ -91,6 +108,7 @@ class SaveMarkdownFileService:
             options=frontmatter_options,
             image_path=image_path,
             no_images=no_images,
+            dry_run=dry_run,
         )
 
         # 2. 파일명 생성
@@ -117,14 +135,25 @@ class SaveMarkdownFileService:
         )
 
         # 6. 파일 저장
-        self.markdown_file_writer.write_markdown_file(
+        write_result = self.markdown_file_writer.write_markdown_file(
             content=combined_markdown,
             filepath=filepath,
             force=force,
+            dry_run=dry_run,
         )
 
         logger.info(f"파일 저장 완료: {filepath}")
-        return str(filepath)
+
+        # 7. 결과 반환
+        image_count = getattr(clipping, "image_count", 0)
+        return SaveMarkdownFileResult(
+            filepath=write_result.filepath,
+            was_saved=write_result.was_saved,
+            content_size=write_result.content_size,
+            frontmatter=frontmatter_dict,
+            filename=final_filename,
+            image_count=image_count,
+        )
 
     def _handle_duplicate_filename(
         self,

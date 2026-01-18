@@ -69,7 +69,7 @@ class TestImageDownloadService:
         image_path = "~/Attachments"
         no_images = True
 
-        result = await image_download_service.process_markdown_images(
+        result, image_count = await image_download_service.process_markdown_images(
             markdown=markdown,
             image_path=image_path,
             no_images=no_images,
@@ -77,6 +77,7 @@ class TestImageDownloadService:
 
         # 원본 콘텐츠 유지
         assert result == markdown
+        assert image_count == 0
 
     @pytest.mark.asyncio
     async def test_process_markdown_images_normal_case(
@@ -103,17 +104,19 @@ class TestImageDownloadService:
         ) as mock_download:
             mock_download.return_value = "/path/to/image.png"
 
-            result = await image_download_service.process_markdown_images(
+            result, image_count = await image_download_service.process_markdown_images(
                 markdown=markdown,
                 image_path=image_path,
                 no_images=no_images,
             )
 
             # Obsidian 참조 형식으로 변환됨
-            assert "![[20250116_" in result  # 타임스탬프 포함
+            assert "![[202" in result  # 타임스탬프 포함
 
             # 다운로드가 호출되었는지 확인
             mock_download.assert_called_once()
+            # 이미지 개수 확인
+            assert image_count == 1
 
     @pytest.mark.asyncio
     async def test_process_markdown_images_download_failure(
@@ -140,7 +143,7 @@ class TestImageDownloadService:
         ) as mock_download:
             mock_download.side_effect = ImageDownloadError("Download failed")
 
-            result = await image_download_service.process_markdown_images(
+            result, image_count = await image_download_service.process_markdown_images(
                 markdown=markdown,
                 image_path=image_path,
                 no_images=no_images,
@@ -148,6 +151,7 @@ class TestImageDownloadService:
 
             # 원본 URL 유지
             assert result == markdown
+            assert image_count == 0
 
     @pytest.mark.asyncio
     async def test_process_markdown_images_multiple_images(
@@ -174,7 +178,7 @@ class TestImageDownloadService:
         ) as mock_download:
             mock_download.return_value = "/path/to/image.png"
 
-            result = await image_download_service.process_markdown_images(
+            result, image_count = await image_download_service.process_markdown_images(
                 markdown=markdown,
                 image_path=image_path,
                 no_images=no_images,
@@ -186,6 +190,8 @@ class TestImageDownloadService:
 
             # 두 번 다운로드가 호출되었는지 확인
             assert mock_download.call_count == 2
+            # 이미지 개수 확인
+            assert image_count == 2
 
     @pytest.mark.asyncio
     async def test_process_markdown_images_no_images_in_content(
@@ -207,7 +213,7 @@ class TestImageDownloadService:
         with patch.object(
             image_downloader, "download_and_save", new_callable=AsyncMock
         ) as mock_download:
-            result = await image_download_service.process_markdown_images(
+            result, image_count = await image_download_service.process_markdown_images(
                 markdown=markdown,
                 image_path=image_path,
                 no_images=no_images,
@@ -217,6 +223,8 @@ class TestImageDownloadService:
             assert result == markdown
             # 다운로드가 호출되지 않았는지 확인
             mock_download.assert_not_called()
+            # 이미지 개수 확인
+            assert image_count == 0
 
     @pytest.mark.asyncio
     async def test_process_markdown_images_partial_failure(
@@ -246,16 +254,18 @@ class TestImageDownloadService:
                 ImageDownloadError("Download failed"),
             ]
 
-            result = await image_download_service.process_markdown_images(
+            result, image_count = await image_download_service.process_markdown_images(
                 markdown=markdown,
                 image_path=image_path,
                 no_images=no_images,
             )
 
             # 첫 번째 이미지는 변환됨
-            assert "![[20250116_" in result
+            assert "![[202" in result
             # 두 번째 이미지는 원본 유지
             assert "https://example.com/img2.jpg" in result
+            # 이미지 개수 확인 (1개만 성공)
+            assert image_count == 1
 
     @pytest.mark.asyncio
     async def test_process_markdown_images_html_img_tag(
@@ -280,12 +290,84 @@ class TestImageDownloadService:
         ) as mock_download:
             mock_download.return_value = "/path/to/image.png"
 
-            result = await image_download_service.process_markdown_images(
+            result, image_count = await image_download_service.process_markdown_images(
                 markdown=markdown,
                 image_path=image_path,
                 no_images=no_images,
             )
 
             # HTML 태그가 Obsidian 참조로 변환됨
-            assert "![[20250116_" in result
+            assert "![[202" in result
             assert "<img" not in result  # HTML 태그 제거
+            # 이미지 개수 확인
+            assert image_count == 1
+
+    @pytest.mark.asyncio
+    async def test_process_markdown_images_dry_run_mode(
+        self, image_download_service: ImageDownloadService, image_downloader: ImageDownloader
+    ) -> None:
+        """
+        dry-run 모드 테스트
+
+        Given: dry_run=True로 설정됨
+
+        When: 마크다운 처리 수행
+
+        Then: 이미지 다운로드가 수행되지 않음
+
+        And: 이미지 개수만 반환됨
+        """
+        markdown = "![alt](https://example.com/image.png)\n![img2](https://example.com/img2.jpg)"
+        image_path = "~/Attachments"
+
+        with patch.object(
+            image_downloader, "download_and_save", new_callable=AsyncMock
+        ) as mock_download:
+            result, image_count = await image_download_service.process_markdown_images(
+                markdown=markdown,
+                image_path=image_path,
+                no_images=False,
+                dry_run=True,
+            )
+
+            # 원본 콘텐츠 유지
+            assert result == markdown
+
+            # 다운로드가 호출되지 않았는지 확인
+            mock_download.assert_not_called()
+
+            # 이미지 개수만 반환됨
+            assert image_count == 2
+
+    @pytest.mark.asyncio
+    async def test_process_markdown_images_dry_run_no_images(
+        self, image_download_service: ImageDownloadService
+    ) -> None:
+        """
+        dry-run 모드 + 이미지 없는 경우 테스트
+
+        Given: dry_run=True로 설정됨
+
+        And: 마크다운 콘텐츠에 이미지가 없음
+
+        When: 마크다운 처리 수행
+
+        Then: 원본 콘텐츠 유지
+
+        And: 이미지 개수는 0
+        """
+        markdown = "텍스트만 있는 콘텐츠입니다."
+        image_path = "~/Attachments"
+
+        result, image_count = await image_download_service.process_markdown_images(
+            markdown=markdown,
+            image_path=image_path,
+            no_images=False,
+            dry_run=True,
+        )
+
+        # 원본 콘텐츠 유지
+        assert result == markdown
+
+        # 이미지 개수는 0
+        assert image_count == 0

@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from src.domain.exceptions import FileExistsError
-from src.infrastructure.markdown_file_writer import MarkdownFileWriter
+from src.infrastructure.markdown_file_writer import MarkdownFileWriter, MarkdownWriteResult
 
 
 class TestMarkdownFileWriter:
@@ -99,3 +99,30 @@ class TestMarkdownFileWriter:
 
         assert filepath.exists()
         assert filepath.read_text(encoding="utf-8") == content
+
+    def test_write_markdown_file_dry_run_mode(self, tmp_path: Path):
+        """dry-run 모드: 파일 저장 안 됨"""
+        writer = MarkdownFileWriter()
+        filepath = tmp_path / "test.md"
+        content = "# Test\n\nContent here..."
+
+        result = writer.write_markdown_file(content, filepath, dry_run=True)
+
+        assert isinstance(result, MarkdownWriteResult)
+        assert not filepath.exists()
+        assert result.was_saved is False
+        assert result.content_size > 0
+
+    def test_write_markdown_file_dry_run_vs_normal_mode(self, tmp_path: Path):
+        """dry-run 모드와 일반 모드 비교"""
+        writer = MarkdownFileWriter()
+        filepath = tmp_path / "test.md"
+        content = "# Test\n\nContent here..."
+
+        dry_run_result = writer.write_markdown_file(content, filepath, dry_run=True)
+        assert not filepath.exists()
+        assert dry_run_result.was_saved is False
+
+        normal_result = writer.write_markdown_file(content, filepath, dry_run=False)
+        assert filepath.exists()
+        assert normal_result.was_saved is True

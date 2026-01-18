@@ -79,6 +79,7 @@ class Clipping(BaseModel):
     url: str = Field(..., description="원본 웹페이지 URL")
     frontmatter: Frontmatter = Field(..., description="YAML frontmatter 메타데이터")
     content: str = Field(default="", description="마크다운 콘텐츠")
+    image_count: int = Field(default=0, description="발견된 이미지 개수")
 
     def to_markdown(self) -> str:
         """

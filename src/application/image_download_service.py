@@ -41,7 +41,8 @@ class ImageDownloadService:
         markdown: str,
         image_path: str,
         no_images: bool = False,
-    ) -> str:
+        dry_run: bool = False,
+    ) -> tuple[str, int]:
         """
         마크다운 내 이미지를 처리합니다.
 
@@ -49,23 +50,29 @@ class ImageDownloadService:
             markdown: 마크다운 콘텐츠
             image_path: 이미지 저장 디렉토리
             no_images: 이미지 다운로드 스킵 여부
+            dry_run: 실제 다운로드하지 않고 이미지 개수만 반환 (기본값: False)
 
         Returns:
-            이미지 처리된 마크다운 콘텐츠
+            (이미지 처리된 마크다운 콘텐츠, 이미지 개수)
         """
         # --no-images 플래그가 설정된 경우 이미지 처리 스킵
         if no_images:
             logger.info("이미지 다운로드 스킵 (--no-images 플래그)")
-            return markdown
+            return markdown, 0
 
         # 이미지 URL 추출
         image_urls = self.image_processor.extract_image_urls(markdown)
 
         if not image_urls:
             logger.debug("마크다운 내 이미지 URL 없음")
-            return markdown
+            return markdown, 0
 
         logger.info(f"발견된 이미지 URL 개수: {len(image_urls)}")
+
+        # dry-run 모드인 경우 이미지 다운로드 스킵
+        if dry_run:
+            logger.info("DRY-RUN 모드: 이미지 다운로드 스킵")
+            return markdown, len(image_urls)
 
         # URL → 파일명 매핑
         url_to_filename: Dict[str, str] = {}
@@ -103,6 +110,6 @@ class ImageDownloadService:
                 url_to_filename=url_to_filename,
             )
             logger.info(f"이미지 처리 완료: {len(url_to_filename)}개 이미지 변환")
-            return processed_markdown
+            return processed_markdown, len(url_to_filename)
 
-        return markdown
+        return markdown, 0

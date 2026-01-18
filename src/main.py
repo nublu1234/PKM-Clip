@@ -83,7 +83,7 @@ def clip(
 
         try:
             # 파일 저장
-            filepath = await service.save_markdown_file(
+            result = await service.save_markdown_file(
                 url=url,
                 output_dir=output,
                 filename=filename,
@@ -91,11 +91,15 @@ def clip(
                 frontmatter_options=cli_options,
                 image_path=settings.app.image_path,
                 no_images=no_images,
+                dry_run=dry_run,
             )
 
-            # 결과 출력
-            logger.info(f"✅ 파일 저장 완료: {filepath}")
-            print(f"✅ 파일 저장 완료: {filepath}")
+            if dry_run:
+                _display_dry_run_result(result)
+            else:
+                # 일반 모드 결과 출력
+                logger.info(f"✅ 파일 저장 완료: {result.filepath}")
+                print(f"✅ 파일 저장 완료: {result.filepath}")
 
         except Exception as e:
             logger.error(f"파일 저장 실패: {e}")
@@ -103,6 +107,41 @@ def clip(
             raise
 
     asyncio.run(process())
+
+
+def _display_dry_run_result(result) -> None:
+    """
+    dry-run 모드 결과를 출력합니다.
+    """
+    print("\n" + "=" * 60)
+    print("🔍 DRY-RUN MODE: 파일이 저장되지 않았습니다.")
+    print("=" * 60)
+
+    # 파일 경로 및 파일명
+    print(f"\n📁 파일 경로: {result.filepath}")
+    print(f"📄 파일명: {result.filename}")
+
+    # Frontmatter 요약
+    print("\n📋 Frontmatter:")
+    frontmatter = result.frontmatter
+    if "title" in frontmatter:
+        print(f"   Title: {frontmatter.get('title')}")
+    if "source" in frontmatter:
+        print(f"   Source: {frontmatter.get('source')}")
+    if "author" in frontmatter:
+        print(f"   Author: {frontmatter.get('author')}")
+    if "tags" in frontmatter:
+        tags = frontmatter.get("tags", [])
+        if tags:
+            print(f"   Tags: {', '.join(tags)}")
+
+    # 콘텐츠 정보
+    print(f"\n📊 마크다운 콘텐츠 길이: {result.content_size:,} bytes")
+    print(f"🖼️  발견된 이미지 개수: {result.image_count}")
+
+    print("\n" + "=" * 60)
+    print("💡 실제 저장을 하려면 --dry-run 옵션을 제거하세요.")
+    print("=" * 60 + "\n")
 
 
 @app.callback()

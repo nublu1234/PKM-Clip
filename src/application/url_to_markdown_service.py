@@ -63,6 +63,7 @@ class URLToMarkdownService:
         options: FrontmatterOptions | None = None,
         image_path: str = "~/Attachments",
         no_images: bool = False,
+        dry_run: bool = False,
     ) -> Clipping:
         """
         URL을 처리하여 Clipping을 반환합니다.
@@ -72,6 +73,7 @@ class URLToMarkdownService:
             options: CLI 옵션으로 지정된 메타데이터
             image_path: 이미지 저장 경로
             no_images: 이미지 다운로드 스킵 여부
+            dry_run: 실제 다운로드하지 않고 결과만 반환 (기본값: False)
 
         Returns:
             생성된 Clipping 엔티티
@@ -81,10 +83,11 @@ class URLToMarkdownService:
         markdown_content = await self.jina_client.fetch_markdown(url)
 
         # 2. 이미지 처리
-        processed_markdown = await self.image_download_service.process_markdown_images(
+        processed_markdown, image_count = await self.image_download_service.process_markdown_images(
             markdown=markdown_content.markdown,
             image_path=image_path,
             no_images=no_images,
+            dry_run=dry_run,
         )
 
         # 3. Frontmatter 생성
@@ -99,6 +102,7 @@ class URLToMarkdownService:
             url=url,
             frontmatter=frontmatter,
             content=processed_markdown,
+            image_count=image_count,
         )
 
         logger.info(f"Clipping 생성 완료: {frontmatter.title}")
